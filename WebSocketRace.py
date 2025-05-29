@@ -1,25 +1,38 @@
 import asyncio
+from csv import Error
+from click import option
 import websockets
 import argparse
 
+import Utility
+
+import re
+
+# Gate to create a websocket connection
+# Read from json
+
 paraser = argparse.ArgumentParser(prog="WebsocketRace")
 
-paraser.add_argument('-d1','--data_one', type=str, help="First data to send", required=True)
-paraser.add_argument('-d2', '--data_two', type=str, help="Second data to send")
+paraser.add_argument('-g', '--gate',type=str, help="First data to send", required=True)
+paraser.add_argument('-r', '--run', help="Run Gate", action='store_true')
 
-paraser.add_argument('-c', '--connection', type=str, help="First Connection Message", default="")
+paraser.add_argument('-d1','--data_one', type=str, help="First data to send", default="")
+paraser.add_argument('-d2', '--data_two', type=str, help="Second data to send", default="")
 
-paraser.add_argument('--cookie', type=str, help="Cookies", default="")
-paraser.add_argument('--origin', type=str, help="Whitelisted Origin", default="")
+paraser.add_argument('-c', '--connection_message', type=str, help="Connection Message", default="")
 
-paraser.add_argument('-u', '--url', type=str, help="Target URL for Websocket Connection", required=True)
+paraser.add_argument('-b', '--cookies', type=str, help="Cookies", default="")
+paraser.add_argument('-o', '--origin', type=str, help="Whitelisted Origin", default="")
+
+paraser.add_argument('-u', '--url', type=str, help="Target URL for Websocket Connection", default="")
 
 args = paraser.parse_args()
 
-async def send_request(uri, message, connection_message):
-    async with websockets.connect(uri, extra_headers={'Origin': args.origin, 'Cookie': args.cookie}) as websocket:
-        if(connection_message != ""):
-            await websocket.send(connection_message)
+# Thread for sending request
+async def send_request(options, data):
+    async with websockets.connect(options.url, extra_headers={'Origin': options.origin, 'Cookie': options.cookies}) as websocket:
+        if(options.connection_message != ""):
+            await websocket.send(options.connection_message)
 
             response = await websocket.recv()
 
@@ -27,22 +40,33 @@ async def send_request(uri, message, connection_message):
 
         await asyncio.sleep(2)
 
-        await websocket.send(message)
+        await websocket.send(options.data)
 
         await asyncio.sleep(2)
 
         response = await websocket.recv()
 
-        print(f"Message: {message}")
         print(f"Response: {response}")
 
         await websocket.close()
 
-async def main():
+# Lining up of the requests
+async def main(options):
     await asyncio.gather(
-        send_request(args.url, args.data_one, args.connection),
-        send_request(args.url, args.data_two, args.connection)
+        send_request(options, options.data_one),
+        send_request(options, options.data_two)
     )
 
-if __name__ == "__main__":
-    asyncio.run(main())
+#Initialise Gate
+
+if(not args.run):
+    Utility.map_to_options(args.gate, args)
+else:
+    options = Utility.fetch_options(args.gate)
+
+    matches = re.findall(r'\b[A-Z]{2,}\b')
+
+    if(options.url == ""):
+        raise SystemExit("Invalid URL")
+    
+    asyncio.run(main(options))
