@@ -1,8 +1,6 @@
-from ast import arg
 import json
 
 from dataclasses import dataclass, asdict
-from typing import Dict
 
 DATA_FILE = 'data.json'
 
