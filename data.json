@@ -1,10 +1,10 @@
 {
   "gate1": {
-    "connection_message": "",
+    "connection_message": "12345 working",
     "cookies": "",
     "origin": "",
     "data_one": "",
     "data_two": "",
-    "url": "test"
+    "url": "{\"session_id\":\"ID\"}"
   }
 }

@@ -51,6 +51,21 @@ def map_to_options(gate_name, args):
 
     dict[gate_name] = options_dict
 
+    print(options_dict)
+
     with open(DATA_FILE, "w") as file:
         file.write(json.dumps(dict, indent=2))
+
+def variables_to_dict(variables):
+    variables_list = str.split(variables, " ")
+
+    variables_dict = {}
+
+    for key_value_pair in variables_list:
+        key = str.split(key_value_pair, ':')[0]
+        value = str.split(key_value_pair, ':')[1]
+
+        variables_dict[key] = value
+
+    return variables_dict
 

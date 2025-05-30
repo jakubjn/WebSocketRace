@@ -1,15 +1,13 @@
 import asyncio
 from csv import Error
 from click import option
+from uritemplate import variables
 import websockets
 import argparse
 
 import Utility
 
 import re
-
-# Gate to create a websocket connection
-# Read from json
 
 paraser = argparse.ArgumentParser(prog="WebsocketRace")
 
@@ -20,6 +18,7 @@ paraser.add_argument('-d1','--data_one', type=str, help="First data to send", de
 paraser.add_argument('-d2', '--data_two', type=str, help="Second data to send", default="")
 
 paraser.add_argument('-c', '--connection_message', type=str, help="Connection Message", default="")
+paraser.add_argument('-v', '--variables', type=str, help="Space separated variables, format NAME:VALUE", default="")
 
 paraser.add_argument('-b', '--cookies', type=str, help="Cookies", default="")
 paraser.add_argument('-o', '--origin', type=str, help="Whitelisted Origin", default="")
@@ -64,7 +63,13 @@ if(not args.run):
 else:
     options = Utility.fetch_options(args.gate)
 
-    matches = re.findall(r'\b[A-Z]{2,}\b')
+    variables = Utility.variables_to_dict(args.variables)
+
+    for key in variables.keys():
+        options.connection_message = options.connection_message.replace(key, variables[key])
+        options.cookies = options.cookies.replace(key, variables[key])
+        options.data_one = options.data_one.replace(key, variables[key])
+        options.data_two = options.data_two.replace(key, variables[key])
 
     if(options.url == ""):
         raise SystemExit("Invalid URL")
